@@ -5,6 +5,7 @@
 (check-equal? (task-4 #() 0) #t "")
 (check-equal? (task-4 #(1 #() #()) 1) #t "")
 (check-equal? (task-4 #() 2) #f "")
+(check-equal? (task-4 #() 2) #f "")
 (check-equal? (task-4 #(0 #(0 #() #()) #()) 2) #t "")
 (check-equal? (task-4 #(0 #(0 #() #()) #(0 #() #())) 2) #f "")
 (check-equal? (task-4 #(0 #(0 #(0 #() #()) #()) #(0 #() #())) 3) #t "")

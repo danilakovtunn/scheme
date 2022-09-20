@@ -9,11 +9,10 @@
 
 (define (task-4 tree h)
     (cond 
-        ((and (empty-tree? tree) (= h 0)) #t)
         ((and (empty-tree? tree) (not (= h 0))) #f)
+        ((and (empty-tree? tree) (= h 0)) #t)
         ((and (empty-tree? (tree-left tree)) (empty-tree? (tree-right tree)) (= h 1)) #t)
-        ; ((and (empty-tree? tree) (not (= h 0))) #f)
-        (else (task-4 (tree-left tree) (- h 1)) (task-4 (tree-right tree) (- h 2)))
+        (else (and (task-4 (tree-left tree) (- h 1)) (task-4 (tree-right tree) (- h 2))))
     )
 )
 
