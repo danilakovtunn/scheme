@@ -188,7 +188,7 @@
       )
 )
 
-;Упражнение 3
+; Упражнение 3
 (define (many-replace-v3 replacement-pairs lst)
       (map
             (lambda (x) (
