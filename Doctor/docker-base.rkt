@@ -5,9 +5,29 @@
 ; основная функция, запускающая "Доктора"
 ; параметр name -- имя пациента
 (define (visit-doctor name)
-      (printf "Hello, ~a!\n" name)
+      (printf "(Hello, ~a!)\n" name)
       (print '(what seems to be the trouble?))
       (doctor-driver-loop-v1 name)
+)
+
+(define (visit-doctor-v1 stopw clientsnum)
+      (let loop ((count clientsnum))
+            (if (= count 0)
+                  (println '(time to go home...))
+                  (let ((name (ask-patient-name)))
+                        (if (equal? name stopw)
+                              (println '(time to go home...))
+
+                              (begin
+                                    (printf "(Hello, ~a! ~a)\n" name count)
+                                    (print '(what seems to be the trouble?))
+                                    (doctor-driver-loop-v1 name)
+                                    (loop (sub1 count))
+                              )
+                        )
+                  )
+            )
+      )
 )
 
 ; цикл диалога Доктора с пациентом
@@ -18,7 +38,7 @@
       (let ((user-response (read)))
             (cond 
                   ((equal? user-response '(goodbye)) ; реплика '(goodbye) служит для выхода из цикла
-                        (printf "Goodbye, ~a!\n" name)
+                        (printf "(Goodbye, ~a!)\n" name)
                         (print '(see you next week))
                   )
                   (else 
@@ -37,8 +57,8 @@
             (let ((user-response (read)))
                   (cond 
                         ((equal? user-response '(goodbye)) ; реплика '(goodbye) служит для выхода из цикла
-                              (printf "Goodbye, ~a!\n" name)
-                              (print '(see you next week))
+                              (printf "(Goodbye, ~a!)\n" name)
+                              (println '(see you next week))
                         )
                         (else 
                               (print (reply-v1 user-response history)) ; иначе Доктор генерирует ответ, печатает его и продолжает цикл
@@ -206,28 +226,35 @@
 ; в Racket нет vector-foldl, реализуем для случая с одним вектором (vect-foldl f init vctr)
 ; у f три параметра i -- индекс текущего элемента, result -- текущий результат свёртки, elem -- текущий элемент вектора
 (define (vector-foldl f init vctr)
-    (let ((length (vector-length vctr)))
-        (let loop ((i 0) (result init))
-            (if (= i length) 
-                result
-                (loop (add1 i) (f i result (vector-ref vctr i)))
+      (let ((length (vector-length vctr)))
+            (let loop ((i 0) (result init))
+                  (if (= i length) 
+                  result
+                  (loop (add1 i) (f i result (vector-ref vctr i)))
+                  )
             )
-        )
-    )
+      )
 )
 
 ; аналогично от конца вектора к началу
 (define (vector-foldr f init vctr)
-    (let ((length (vector-length vctr)))
-        (let loop ((i (sub1 length)) (result init))
-            (if (= i -1) 
-                result
-                (loop (sub1 i) (f i result (vector-ref vctr i)))
+      (let ((length (vector-length vctr)))
+            (let loop ((i (sub1 length)) (result init))
+                  (if (= i -1) 
+                  result
+                  (loop (sub1 i) (f i result (vector-ref vctr i)))
+                  )
             )
-        )
     )
 )
 
+(define (ask-patient-name)
+      (begin
+            (println '(next!))
+            (println '(who are you?))
+            (print '**)
+            (car (read))
+      ) 
+)
 
-
-(visit-doctor 'Danila)
+(visit-doctor-v1 'quit 3)
