@@ -18,7 +18,7 @@
                         (if (equal? name stopw)
                               (println '(time to go home...))
                               (begin
-                                    (printf "(Hello, ~a! ~a)\n" name count)
+                                    (printf "(Hello, ~a!)\n" name)
                                     (print '(what seems to be the trouble?))
                                     (doctor-driver-loop-v1 name)
                                     (loop (sub1 count))
@@ -139,6 +139,69 @@
       (list-ref lst (random (length lst)))
 )
 
+; Упражние 1 - повышение уровня абстракции
+; Если существует слово которое надо заменить - получим его замену или #f 
+(define (contain-first? lst str)
+      (call/cc
+            (lambda (cc-exit)
+                  (foldl 
+                        (lambda (x y) (if (memq str (car x)) 
+                              (cc-exit (cdr x))
+                              y
+                        ))
+                        #f
+                        lst
+                  )
+            )
+      )  
+)
+; структура нового списка: '(((<замена1> <замена2>) <на что заменить>) ...)
+(define (contain-second? lst str)
+      (call/cc
+            (lambda (cc-exit)
+                  (foldl 
+                        (lambda (x y) (if (equal? (cdr x) str) 
+                              (cc-exit #t)
+                              y
+                        ))
+                        #f
+                        lst
+                  )
+            )
+      )
+)
+; Построение списка нового вида по старому списку (конструктор)
+(define (make-replacement replacement) 
+      (let loop ((lst replacement) (res '()))
+            (cond 
+                  ((null? lst) 
+                        res
+                  )
+                  ((contain-second? res (cdar lst)) 
+                        (loop 
+                              (cdr lst) 
+                              (map 
+                                    (lambda(x) 
+                                          (if (equal? (cdar lst) (cdr x))
+                                                (cons (cons (caar lst) (car x)) (cdr x))
+                                                x
+                                          )
+                                    ) 
+                                    res
+                              )
+                        )
+                  )
+                  (else 
+                        (loop 
+                              (cdr lst) 
+                              (cons (cons (list (caar lst)) (cdar lst)) res)
+                        )
+                  )
+            )
+      )      
+)
+
+
 ; Задание 1
 ; замена лица во фразе
 (define (change-person phrase)
@@ -185,21 +248,45 @@
             )
       )
 )
+;Упражнение 1
+(define (many-replace-v1 replacement-pairs lst)
+      (let ((new (make-replacement replacement-pairs)))
+            (let loop ((lst lst)) ; Доктор ищет первый элемент списка в ассоциативном списке замен
+                  (cond
+                        ((null? lst) 
+                              lst)
+                        (else 
+                              (let ((pat-rep (contain-first? new (car lst))))
+                                    (cons 
+                                          (if pat-rep 
+                                                (car pat-rep) ; если поиск был удачен, то в начало ответа Доктор пишет замену
+                                                (car lst) ; иначе в начале ответа помещается начало списка без изменений
+                                          )
+                                          (loop (cdr lst)) ; рекурсивно производятся замены в хвосте списка
+                                    )
+                              )
+                        )
+                  )
+            )
+      )
+)
 
 ; Упражнение 2
 (define (many-replace-v2 replacement-pairs lst)
-      (let loop ((lst lst) (res '()))
-            (if (null? lst) 
-                  (reverse res)
-                  (let ((pat-rep (assoc (car lst) replacement-pairs)))
-                        (loop 
-                              (cdr lst) 
-                              (cons 
-                                    (if pat-rep 
-                                          (cadr pat-rep)
-                                          (car lst)
+      (let ((new (make-replacement replacement-pairs)))
+            (let loop ((lst lst) (res '()))
+                  (if (null? lst) 
+                        (reverse res)
+                        (let ((pat-rep (contain-first? new (car lst))))
+                              (loop 
+                                    (cdr lst) 
+                                    (cons 
+                                          (if pat-rep 
+                                                (car pat-rep)
+                                                (car lst)
+                                          )
+                                          res
                                     )
-                                    res
                               )
                         )
                   )
@@ -209,16 +296,18 @@
 
 ; Упражнение 3
 (define (many-replace-v3 replacement-pairs lst)
-      (map
-            (lambda (x) (
-                  let ((pat-rep (assoc x replacement-pairs)))
-                        (if pat-rep
-                              (cadr pat-rep)
-                              x
+      (let ((new (make-replacement replacement-pairs)))
+            (map
+                  (lambda (x) 
+                        (let ((pat-rep (contain-first? new x)))
+                              (if pat-rep
+                                    (car pat-rep)
+                                    x
+                              )
                         )
                   )
+                  lst
             )
-            lst
       )
 )
 
