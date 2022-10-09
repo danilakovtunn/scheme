@@ -10,6 +10,7 @@
       (doctor-driver-loop-v1 name)
 )
 
+; Упражнение 5: стоп-слово + многопользовательность
 (define (visit-doctor-v1 stopw clientsnum)
       (let loop ((count clientsnum))
             (if (= count 0)
@@ -49,6 +50,7 @@
 )
 
 ; Упражнение 4
+; Добавление истории
 (define (doctor-driver-loop-v1 name)
       (let for-history ((history '()))
             (newline)
@@ -60,7 +62,7 @@
                               (println '(see you next week))
                         )
                         (else 
-                              (print (reply-v1 user-response history)) ; иначе Доктор генерирует ответ, печатает его и продолжает цикл
+                              (print (reply-v2 user-response history)) ; иначе Доктор генерирует ответ, печатает его и продолжает цикл
                               (for-history (cons user-response history))
                         )
                   )
@@ -78,6 +80,7 @@
 )
 
 ; Упражнение 4 
+; 3 стратегия генерации ответа
 (define (reply-v1 user-response history)
       (if (null? history)
             (case (random 2) ; с равной вероятностью выбирается один из двух способов построения ответа
@@ -88,6 +91,19 @@
                   ((0) (qualifier-answer user-response)) ; 1й способ
                   ((1) (hedge-answer))  ; 2й способ
                   ((2) (history-answer history))
+            )
+      )
+)
+
+; Упражнение 6
+; 4 стратегия генерации ответа
+(define (reply-v2 user-response history)
+      (let loop ((beg 0) (end 4))
+            (case (random beg end) ; с равной вероятностью выбирается один из двух способов построения ответа
+                  ((0) (if (null? history) (loop (add1 beg) end) (history-answer history)))
+                  ((1) (qualifier-answer user-response)) ; 1й способ
+                  ((2) (hedge-answer))  ; 2й способ
+                  ((3) (if (key-contains? (keys->list list-answers) user-response) (key-answer user-response list-answers) (loop beg (sub1 end))))
             )
       )
 )
@@ -127,17 +143,149 @@
 )                                         
 
 ; Упражниние 4
-; Третий способ генерации ответной реплики -- использования истории
+; 3й способ генерации ответной реплики -- использования истории
 (define (history-answer history)
       (append 
             '(earlier you said that)
             (change-person (pick-random history))
       )
 )
-; случайный выбор одного из элементов непустого списка lst
-(define (pick-random lst)
-      (list-ref lst (random (length lst)))
+
+; 4й споcоб генерации ответной реплики - ключевые слова
+(define (key-answer user-response keys)
+      ; Выбор ключевого слова
+      (let ((keyword (pick-random (keyword-list keys user-response))))
+            (let ((answer (pick-random (get-answers keyword keys))))
+                  (many-replace-v3 (list (list '* keyword)) answer)
+            )
+      )
 )
+
+
+
+;************************ структура данных для ключевых слов 6 упражнение ****************************
+(define list-answers '(
+      (
+            (depressed suicide exams university)
+            (
+                  (when you feel depressed, go out for ice cream)
+                  (depression is a disease that can be treated)
+                  (during * you shold relax)
+                  (try not to waste your time)
+            )
+      )
+      (
+            (mother father parents brother sister uncle aunt grandma grandpa)
+            (
+                  (tell me more about your * , i want to know all about your *)
+                  (why do you feel that way about your * ?)
+                  (how many relatives do you have)
+                  (what is your relationship with *)
+            )
+      )
+      (
+            (university scheme lections practicum dl)
+            (
+                  (your education is important)
+                  (how much time do you spend to education ?)
+                  (how useful it is to go to * ?)
+                  (do you like * ?)
+            )
+      )
+      (
+            (scheme lisp scala)
+            (
+                  (functional programming is a most attractive programming paradigm isnt it ?)
+                  (* rules whole world !)
+                  (brackets is fin isnt it ?)
+                  (try to use imperative programming languages)
+            )
+      )
+      (
+            (c++ java c#)
+            (
+                  (object-oriented programming is a prettiest programming paradigm ever isnt it ?)
+                  (* is the best one !)
+                  (tell me more about *)
+                  (* is one of the most popular programming languages)
+            )
+      )
+      (
+            (breakfast lunch dinner supper food eat)
+            (
+                  (you should eat regularry)
+                  (have you already had *)
+                  (healthy food is the key to health)
+                  (eating 3 times a day is the best thing)
+            )
+      )
+      (
+            (ussr usa politics ukraine war)
+            (
+                  (politics only brings misery)
+                  (don't think about *)
+                  (thinking about * in your free time leads to depression)
+                  (how much time do you spend thinking about it)
+            )
+      ))
+)
+
+(define (get-answers keyword keys)
+      (let loop ((lst keys) (res '()))
+            (if (null? lst) 
+                  res
+                  (loop 
+                        (cdr lst) 
+                        (if (memq keyword (caar lst))
+                              (append res (cadar lst))
+                              res
+                        )
+                  )
+            )
+      )
+)
+
+; Списко всех ключевых слов
+(define (keyword-list keys user-response)
+      (let ((lst (keys->list keys)))
+            (filter (lambda(x) (memq x lst)) user-response)
+      )
+)
+
+; Свернуть все ключи с ответами только в ключи, встречающие каждый по 1 разу
+(define (keys->list keys)
+      (let loop ((lst keys) (res '()))
+            (if (null? lst) 
+                  res
+                  (loop 
+                        (cdr lst) 
+                        (append res (filter (lambda(x) (not (memq x res))) (caar lst)))
+                  )
+            )
+      )
+)
+
+; содержиться ли ключ в ответе?
+(define (key-contains? list-keys user-response)
+      (call/cc
+            (lambda (cc-exit)
+                  (foldl 
+                        (lambda (x y) (foldl
+                              (lambda (w z) (if (equal? x w)
+                                    (cc-exit #t)
+                                    z
+                              ))
+                              #f
+                              user-response
+                        ))
+                        #f
+                        list-keys
+                  )
+            )
+      )  
+)
+
+;************************ повышение уровня абстракции 1 упражнение ***********************************
 
 ; Упражние 1 - повышение уровня абстракции
 ; Если существует слово которое надо заменить - получим его замену или #f 
@@ -200,9 +348,8 @@
             )
       )      
 )
+;*****************************************************************************************************
 
-
-; Задание 1
 ; замена лица во фразе
 (define (change-person phrase)
       (many-replace-v3 '(
@@ -343,6 +490,11 @@
             (print '**)
             (car (read))
       ) 
+)
+
+; случайный выбор одного из элементов непустого списка lst
+(define (pick-random lst)
+      (list-ref lst (random (length lst)))
 )
 
 (visit-doctor-v1 'quit 3)
