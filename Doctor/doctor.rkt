@@ -62,7 +62,7 @@
                               (println '(see you next week))
                         )
                         (else 
-                              (print (reply-v2 user-response history)) ; иначе Доктор генерирует ответ, печатает его и продолжает цикл
+                              (print (reply-v3 user-response history)) ; иначе Доктор генерирует ответ, печатает его и продолжает цикл
                               (for-history (cons user-response history))
                         )
                   )
@@ -92,13 +92,80 @@
 ; Упражнение 6
 ; 4 стратегия генерации ответа
 (define (reply-v2 user-response history)
-      (case (random (if (null? history) 1 0) (if (key-contains? (keys->list list-answers) user-response) 4 3)) ; с равной вероятностью выбирается один из двух способов построения ответа
+      (case (random (if (null? history) 1 0) (if (key-contains? (keys->list list-answers) user-response) 4 3))
             ((0) (history-answer history))
             ((1) (qualifier-answer user-response)) ; 1й способ
             ((2) (hedge-answer))  ; 2й способ
-            ((3) (key-answer user-response list-answers))
+            ((3) (key-answer user-response))
       )
 )
+
+
+; Упражнение 7
+; обобщенный reply
+(define (reply-v3 user-response history)
+      ((pick-random-with-weight 
+            (get-strategies-list 
+                  user-response 
+                  history 
+                  strategies
+            )) 
+            user-response 
+            history
+      )
+)
+; Список стратегий: веса, предикаты, функции
+(define strategies
+      (list 
+            (list 
+                  5  
+                  (lambda(x y) (if (null? y) #f #t))
+                  (lambda(x y) (history-answer y)))
+            (list 
+                  3  
+                  (lambda(x y) #t)
+                  (lambda(x y) (qualifier-answer x)))
+            (list 
+                  3
+                  (lambda(x y) #t)
+                  (lambda(x y) (hedge-answer)))
+            (list 
+                  7
+                  (lambda(x y) (if (key-contains? (keys->list list-answers) x) #t #f))
+                  (lambda(x y) (key-answer x))) 
+      )
+)
+
+; список стратегий, где все предикаты != #f
+(define (get-strategies-list user-response history strategies)
+      (filter 
+            (lambda (x) ((cadr x) user-response history))
+            strategies
+      )
+)
+
+; return случайно выбранную функцию с учетом веса
+(define (pick-random-with-weight lst)
+      (let ((weights (foldl (lambda(x y) (+ (car x) y)) 0 lst)))
+            (let ((rnd (random weights)))
+                  (call/cc
+                        (lambda (cc-exit)
+                              (foldl 
+                                    (lambda (x y) 
+                                          (if (> (+ y (car x)) rnd)
+                                                (cc-exit (caddr x))
+                                                (+ y (car x))
+                                          )
+                                    )
+                                    0
+                                    lst
+                              )
+                        )
+                  ) 
+            )
+      )
+)
+
 
 ; 1й способ генерации ответной реплики -- замена лица в реплике пользователя и приписывание к результату нового начала
 (define (qualifier-answer user-response)
@@ -144,10 +211,10 @@
 )
 
 ; 4й споcоб генерации ответной реплики - ключевые слова
-(define (key-answer user-response keys)
+(define (key-answer user-response)
       ; Выбор ключевого слова
-      (let ((keyword (pick-random (keyword-list keys user-response))))
-            (let ((answer (pick-random (get-answers keyword keys))))
+      (let ((keyword (pick-random (keyword-list list-answers user-response))))
+            (let ((answer (pick-random (get-answers keyword list-answers))))
                   (many-replace-v3 (list (list '* keyword)) answer)
             )
       )
@@ -169,7 +236,7 @@
       (
             (mother father parents brother sister uncle aunt grandma grandpa)
             (
-                  (tell me more about your * , i want to know all about your *)
+                  (tell me more about your * i want to know all about your *)
                   (why do you feel that way about your * ?)
                   (how many relatives do you have)
                   (what is your relationship with *)
@@ -215,7 +282,7 @@
             (ussr usa politics ukraine war)
             (
                   (politics only brings misery)
-                  (don't think about *)
+                  (do not think about *)
                   (thinking about * in your free time leads to depression)
                   (how much time do you spend thinking about it)
             )
