@@ -82,29 +82,21 @@
 ; Упражнение 4 
 ; 3 стратегия генерации ответа
 (define (reply-v1 user-response history)
-      (if (null? history)
-            (case (random 2) ; с равной вероятностью выбирается один из двух способов построения ответа
-                  ((0) (qualifier-answer user-response)) ; 1й способ
-                  ((1) (hedge-answer))  ; 2й способ
-            )
-            (case (random 3) ; с равной вероятностью выбирается один из двух способов построения ответа
-                  ((0) (qualifier-answer user-response)) ; 1й способ
-                  ((1) (hedge-answer))  ; 2й способ
-                  ((2) (history-answer history))
-            )
+      (case (random (if (null? history) 2 3)) ; с равной вероятностью выбирается один из двух способов построения ответа
+            ((0) (qualifier-answer user-response)) ; 1й способ
+            ((1) (hedge-answer))  ; 2й способ
+            ((2) (history-answer history))
       )
 )
 
 ; Упражнение 6
 ; 4 стратегия генерации ответа
 (define (reply-v2 user-response history)
-      (let loop ((beg 0) (end 4))
-            (case (random beg end) ; с равной вероятностью выбирается один из двух способов построения ответа
-                  ((0) (if (null? history) (loop (add1 beg) end) (history-answer history)))
-                  ((1) (qualifier-answer user-response)) ; 1й способ
-                  ((2) (hedge-answer))  ; 2й способ
-                  ((3) (if (key-contains? (keys->list list-answers) user-response) (key-answer user-response list-answers) (loop beg (sub1 end))))
-            )
+      (case (random (if (null? history) 1 0) (if (key-contains? (keys->list list-answers) user-response) 4 3)) ; с равной вероятностью выбирается один из двух способов построения ответа
+            ((0) (history-answer history))
+            ((1) (qualifier-answer user-response)) ; 1й способ
+            ((2) (hedge-answer))  ; 2й способ
+            ((3) (key-answer user-response list-answers))
       )
 )
 
@@ -168,7 +160,7 @@
       (
             (depressed suicide exams university)
             (
-                  (when you feel depressed, go out for ice cream)
+                  (when you feel depressed go out for ice cream)
                   (depression is a disease that can be treated)
                   (during * you shold relax)
                   (try not to waste your time)
@@ -231,17 +223,15 @@
 )
 
 (define (get-answers keyword keys)
-      (let loop ((lst keys) (res '()))
-            (if (null? lst) 
-                  res
-                  (loop 
-                        (cdr lst) 
-                        (if (memq keyword (caar lst))
-                              (append res (cadar lst))
-                              res
-                        )
-                  )
+      (foldl 
+            (lambda (x y)
+                  (if (memq keyword (car x))
+                        (append y (cadr x))
+                        y
+                  )    
             )
+            '()
+            keys
       )
 )
 
