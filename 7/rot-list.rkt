@@ -32,3 +32,44 @@
 )
 
 ; Так как возможна корректная реализация с помощью функции, то неуместно использовать макрос. 
+
+(define l (mlist 1))
+(rot-left! l)
+(display l)
+(display "\n")
+
+(set! l (mlist))
+(rot-left! l)
+(display l)
+(display "\n")
+
+(set! l (mlist 1 2 3))
+(rot-left! l)
+(display l)
+(display "\n")
+
+(set! l (mlist 1 2 3 4 5))
+(rot-left! l)
+(display l)
+(display "\n")
+
+
+(set! l (mlist 1))
+(macros-rot-left! l)
+(display l)
+(display "\n")
+
+(set! l (mlist))
+(macros-rot-left! l)
+(display l)
+(display "\n")
+
+(set! l (mlist 1 2 3))
+(rot-left! l)
+(display l)
+(display "\n")
+
+(set! l (mlist 1 2 3 4 5))
+(macros-rot-left! l)
+(display l)
+(display "\n")
