@@ -1,6 +1,6 @@
 #lang racket/base
 
-(define Y 
+(define Y
     (lambda (f) (
         (lambda (x) (x x))
         (lambda (g) (f (lambda args (apply (g g) args)))))
@@ -9,8 +9,8 @@
 
 ; С ОСТАТОЧНЫМИ ВЫЧИСЛЕНИЯМИ, НЕ ИТЕРАТИВНЫЙ ПРОЦЕСС
 (define n!!!! (Y (lambda (f) (
-    lambda (n) 
-        (cond 
+    lambda (n)
+        (cond
             ((< n 2) 1)
             ((= n 2) 2)
             ((= n 3) 3)
@@ -24,14 +24,14 @@
 ; ОТВЕТ (ИТЕРАТИВНЫЙ ПРОЦЕСС)
 (define n!!!!v2 (lambda (n)
     ((Y (lambda (f) (lambda (i result) (
-        cond 
+        cond
             ((< i 2) result)
             ((= i 2) (* result 2))
             ((= i 3) (* result 3))
-            (else 
+            (else
                 (f (- i 4) (* i result))
             )
-        )))) 
+        ))))
         n 1)))
 
 (n!!!!v2 0)
