@@ -1,5 +1,5 @@
-#lang scheme/base
-
+#lang racket/base
+(require racket/stream)
 ; 2.I
 
 (define-syntax when
@@ -70,3 +70,39 @@
 )
 
 ; 2.VI
+(define (div3 n)
+    (if (> (remainder n 3) 0)
+        n
+        (div3 (/ n 3))
+    )
+)
+
+(define (div5 n)
+    (if (> (remainder n 5) 0)
+        n
+        (div5 (/ n 5))
+    )
+)
+
+
+(define (power35? n)
+    (if (= (div5 (div3 n)) 1)
+        #t
+        #f
+    )
+)
+
+(define (ints-from n)
+    (stream-cons n (ints-from (+ n 1))))
+(define ints (ints-from 1))
+
+(define (stream3^m5^n-from ints)
+    (let ((first (stream-first ints)))
+        (if (power35? first)
+            (stream-cons first (stream3^m5^n-from (stream-rest ints)))
+            (stream3^m5^n-from (stream-rest ints))
+        )
+    )
+)
+
+(define stream3^m5^n (stream3^m5^n-from ints))

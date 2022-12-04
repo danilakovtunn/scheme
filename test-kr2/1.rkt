@@ -38,7 +38,7 @@ x
 (newline)
 
 ; 4
-; lambda-reduction??????
+; done
 
 
 ; 6
@@ -64,4 +64,4 @@ b
 ; check
 
 ; 12 
-; ?????
+; maybe done
